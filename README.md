@@ -54,7 +54,7 @@ Distributed under the `Apache License, Version 2.0`. See [LICENSE](LICENSE) for 
 
 ## Contact
 
-Your Name - [@aduminuc](https://github.com/aduminuc) - aduminuc@cisco.com
+Alessandro Duminuco - [@aduminuc](https://github.com/aduminuc) - aduminuc@cisco.com
 
 Project Link: [https://github.com/agntcy/acp-sdk](https://github.com/agntcy/acp-sdk)
 
