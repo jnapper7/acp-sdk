@@ -1,5 +1,6 @@
 # Agent Connect Protocol SDK
 
+[![Release](https://img.shields.io/github/v/release/agntcy/acp-sdk?display_name=tag)](CHANGELOG.md)
 [![Contributor-Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-fbab2c.svg)](CODE_OF_CONDUCT.md)
 
 ## About The Project
@@ -7,29 +8,6 @@
 The "Agent Connect Protocol SDK" is an open-source library designed to facilitate the adoption of the Agent Connect Protocol.
 It offers tools for both client and server implementations, enabling seamless integration and communication between multi-agent systems.
 
-### Components:
-
-- **Agent Connect Protocol Client SDK**: A Python library providing function wrappers for the Agent Connect Protocol OpenAPI/REST calls.
-It is designed for multi-agent applications where agents are remotely accessed.
-
-- **Agent Connect Protocol Server SDK**: A Python library that simplifies exposing an Agent Connect Protocol interface from any agent.
-It allows agents to be remotely consumed through the protocol and can be mapped to specific agent frameworks.
-
-## Getting Started
-
-TBD
-
-<!-- ### Prerequisites
-
-TBD
-
-### Installation
-
-TBD
-
-## Usage
-
-TBD -->
 
 ## Roadmap
 
@@ -37,26 +15,27 @@ See the [open issues](https://github.com/agntcy/acp-sdk/issues) for a list of pr
 
 ## Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. For detailed contributing guidelines, please see [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**. For detailed contributing guidelines, please see [CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 
-### Top contributors
+## Copyright Notice and License
 
-<a href="https://github.com/agntcy/repo-template/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=agntcy/repo-template" alt="contrib.rocks image" />
-</a>
+[Copyright Notice and License](./LICENSE)
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+Copyright (c) 2025 Cisco and/or its affiliates.
 
-## License
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Distributed under the `Apache License, Version 2.0`. See [LICENSE](LICENSE) for more information.
+       http://www.apache.org/licenses/LICENSE-2.0
 
-## Contact
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
-Alessandro Duminuco - [@aduminuc](https://github.com/aduminuc) - aduminuc@cisco.com
-
-Project Link: [https://github.com/agntcy/acp-sdk](https://github.com/agntcy/acp-sdk)
 
 ## Acknowledgements
 
