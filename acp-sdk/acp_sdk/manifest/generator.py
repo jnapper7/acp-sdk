@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025 Cisco and/or its affiliates.
+# SPDX-License-Identifier: Apache-2.0
 import os
 
 from acp_sdk.models.models import AgentManifest
@@ -14,6 +16,7 @@ from .exceptions import ManifestValidationException
 
 ACP_SPEC_PATH = os.path.join(os.path.dirname(__file__), "../acp-spec/openapi.yml")
 CLIENT_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../scripts/create_acp_client.sh")
+
 
 def generate_agent_oapi(manifest: AgentManifest):
     spec_dict, base_uri = read_from_filename(ACP_SPEC_PATH)
@@ -35,7 +38,8 @@ def generate_agent_oapi(manifest: AgentManifest):
             del spec_dict['paths']['/runs/{run_id}/threadstate']
     else:
         if manifest.specs.thread_state:
-            raise ManifestValidationException("Cannot define `specs.thread_state` if `specs.capabilities.threads` is `false`")
+            raise ManifestValidationException(
+                "Cannot define `specs.thread_state` if `specs.capabilities.threads` is `false`")
         else:
             spec_dict['tags'] = [tag for tag in spec_dict['tags'] if tag['name'] != 'Threads']
             del spec_dict['paths']['/threads']
@@ -77,7 +81,8 @@ def generate_agent_oapi(manifest: AgentManifest):
             )
             spec_dict['components']['schemas']['InterruptPayloadSchema']['discriminator']['mapping'][
                 interrupt.interrupt_type] = f'#/components/schemas/{interrupt_payload_schema_name}'
-            spec_dict['components']['schemas'][interrupt_payload_schema_name] = copy.deepcopy(interrupt.interrupt_payload)
+            spec_dict['components']['schemas'][interrupt_payload_schema_name] = copy.deepcopy(
+                interrupt.interrupt_payload)
 
             resume_payload_schema_name = f"{interrupt.interrupt_type}ResumePayload"
             interrupt.resume_payload['properties']['interrupt_type'] = interrupt.interrupt_payload['properties'][
@@ -97,19 +102,21 @@ def generate_agent_oapi(manifest: AgentManifest):
         del spec_dict['paths']['/runs/{run_id}']['post']
         interrupt_ref = spec_dict['components']['schemas']['RunOutput']['discriminator']['mapping']['interrupt']
         del spec_dict['components']['schemas']['RunOutput']['discriminator']['mapping']['interrupt']
-        spec_dict['components']['schemas']['RunOutput']['oneOf'] = [e for e in spec_dict['components']['schemas']['RunOutput']['oneOf'] if e['$ref']!=interrupt_ref]
-
+        spec_dict['components']['schemas']['RunOutput']['oneOf'] = [e for e in
+                                                                    spec_dict['components']['schemas']['RunOutput'][
+                                                                        'oneOf'] if e['$ref'] != interrupt_ref]
 
     validate(spec_dict)
     return spec_dict
 
-def generate_agent_models(manifest:AgentManifest, path:str):
+
+def generate_agent_models(manifest: AgentManifest, path: str):
     agent_spec = generate_agent_oapi(manifest)
     agent_sdk_path = os.path.join(path, f'{manifest.metadata.ref.name}')
     agent_models_dir = os.path.join(agent_sdk_path, 'models')
     specpath = os.path.join(agent_sdk_path, f'openapi.yml')
     modelspath = os.path.join(agent_models_dir, f'models.py')
-    
+
     os.makedirs(agent_models_dir, exist_ok=True)
 
     with open(specpath, 'w') as file:
@@ -124,23 +131,20 @@ def generate_agent_models(manifest:AgentManifest, path:str):
     )
 
 
-
-def generate_agent_client(manifest:AgentManifest, path:str):
+def generate_agent_client(manifest: AgentManifest, path: str):
     agent_spec = generate_agent_oapi(manifest)
     agent_sdk_path = os.path.join(path, f'{manifest.metadata.ref.name}')
     os.makedirs(agent_sdk_path, exist_ok=True)
     specpath = os.path.join(agent_sdk_path, f'openapi.yml')
-
 
     with open(specpath, 'w') as file:
         yaml.dump(agent_spec, file, default_flow_style=False)
 
     shutil.copy(CLIENT_SCRIPT_PATH, agent_sdk_path)
     subprocess.run(
-         [
-             "/bin/bash",
-             "create_acp_client.sh",
+        [
+            "/bin/bash",
+            "create_acp_client.sh",
         ],
         cwd=agent_sdk_path
     )
-
