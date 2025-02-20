@@ -11,6 +11,11 @@ It offers tools for both client and server implementations, enabling seamless in
 
 ## Getting Started
 
+### Clone and update submodules
+```sh
+git submodule update --init --recursive
+```
+
 ### Install project dependencies
 
 ```sh

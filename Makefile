@@ -1,6 +1,9 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 Cisco and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
 
+install: 
+	cd acp-sdk && poetry install
+
 generate_sdk_models:
 	cd acp-sdk && poetry run datamodel-codegen \
 		--input acp_sdk/acp-spec/openapi.yaml \
@@ -30,5 +33,7 @@ generate_acp_server:
 
 generate: generate_sdk_models generate_acp_client generate_acp_server
 
-test: generate_sdk_models
+test: install generate_sdk_models
 	make -C acp-sdk test
+
+all: install generate test
