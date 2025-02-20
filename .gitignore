@@ -1,0 +1,13 @@
+.idea
+___*
+.idea
+.DS_STORE
+__pycache__
+___*
+*.code-workspace
+*_graph.png
+.env
+venv
+.venv
+acp-client
+acp-server-stub

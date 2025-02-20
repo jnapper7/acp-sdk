@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "ref": {
+      "name": "org.agntcy.sample-agent-1",
+      "version": "0.0.1"
+    },
+    "description": "Sample agent description. Says what the agent does."
+  },
+  "specs": {
+    "capabilities": {
+        "threads": false,
+        "callbacks": true
+    },
+    "input": {
+      "type": "integer"
+    },
+    "output": {
+      "type": "object",
+      "description": "The output of the agent",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "description": "The configuration of the agent",
+      "properties": {
+        "test": {
+          "type": "boolean"
+        }
+      }
+    },
+    "interrupts": [
+      {
+        "interrupt_type": "purchase_approval",
+        "interrupt_payload": {
+          "type": "object",
+          "title": "Purchase Approval Payload",
+          "description": "Description of the purchase provided by this interrupt type",
+          "properties": {
+            "description": {
+              "title": "Purchase Description",
+              "description": "Natural language description of the purchase that is about to be made by this agent",
+              "type": "string"
+            },
+            "amount": {
+              "title": "Purchase amount",
+              "description": "Amount that is going to be charged if the purchase is approved",
+              "type": "number"
+            },
+            "currency": {
+              "title": "Purchase Currency",
+              "description": "Currency that is going to be used for the purchase",
+              "type": "string",
+              "enum": [
+                "EUR",
+                "USD",
+                "GBP"
+              ]
+            }
+          },
+          "required": [
+            "description",
+            "amount",
+            "currency"
+          ]
+        },
+        "resume_payload": {
+          "type": "object",
+          "title": "Purchase Approval Input",
+          "description": "Input expected for this interrupt",
+          "properties": {
+            "reason": {
+              "title": "Approval Reason",
+              "description": "Reason to approve or decline",
+              "type": "string"
+            },
+            "approved": {
+              "title": "Approval Decision",
+              "description": "True if approved, False if declined",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "approved"
+          ]
+        }
+      },
+      {
+        "interrupt_type": "clarification",
+        "interrupt_payload": {
+          "title": "Clarification Question",
+          "description": "Additional question the agent is asking",
+          "type": "object",
+          "properties": {
+            "question": {
+              "type": "string",
+              "title": "Question",
+              "description": "Text of the question"
+            }
+          }
+        },
+        "resume_payload": {
+          "title": "Answer",
+          "description": "Answer to Additional question the agent asked",
+          "type": "object",
+          "properties": {
+            "answer": {
+              "type": "string",
+              "title": "Answer",
+              "description": "Text of the answer"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "dependencies": [
+    {
+      "name": "org.agntcy.sample-agent-2",
+      "version": "0.0.1"
+    },
+    {
+      "name": "org.agntcy.sample-agent-3",
+      "version": "0.0.1"
+    }
+  ],
+  "deployments": [
+    {
+      "type": "source_code",
+      "name": "src",
+      "url": "file:///tmp/agent-1",
+      "framework_config": {
+        "framework_type": "langgraph",
+        "graph": "agentgraph"
+      }
+    }
+  ]
+}
