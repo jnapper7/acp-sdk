@@ -14,7 +14,7 @@ import subprocess
 import shutil
 from .exceptions import ManifestValidationException
 
-ACP_SPEC_PATH = os.path.join(os.path.dirname(__file__), "../acp-spec/openapi.yml")
+ACP_SPEC_PATH = os.path.join(os.path.dirname(__file__), "../acp-spec/openapi.yaml")
 CLIENT_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../scripts/create_acp_client.sh")
 
 
@@ -114,7 +114,7 @@ def generate_agent_models(manifest: AgentManifest, path: str):
     agent_spec = generate_agent_oapi(manifest)
     agent_sdk_path = os.path.join(path, f'{manifest.metadata.ref.name}')
     agent_models_dir = os.path.join(agent_sdk_path, 'models')
-    specpath = os.path.join(agent_sdk_path, f'openapi.yml')
+    specpath = os.path.join(agent_sdk_path, f'openapi.yaml')
     modelspath = os.path.join(agent_models_dir, f'models.py')
 
     os.makedirs(agent_models_dir, exist_ok=True)
@@ -135,7 +135,7 @@ def generate_agent_client(manifest: AgentManifest, path: str):
     agent_spec = generate_agent_oapi(manifest)
     agent_sdk_path = os.path.join(path, f'{manifest.metadata.ref.name}')
     os.makedirs(agent_sdk_path, exist_ok=True)
-    specpath = os.path.join(agent_sdk_path, f'openapi.yml')
+    specpath = os.path.join(agent_sdk_path, f'openapi.yaml')
 
     with open(specpath, 'w') as file:
         yaml.dump(agent_spec, file, default_flow_style=False)
