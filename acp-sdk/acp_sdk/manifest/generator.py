@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 
-from acp_sdk.models.models import AgentManifest
+from acp_sdk.models.models import AgentManifest, StreamingMode
 import yaml
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
@@ -18,29 +18,23 @@ ACP_SPEC_PATH = os.path.join(os.path.dirname(__file__), "../acp-spec/openapi.yam
 CLIENT_SCRIPT_PATH = os.path.join(os.path.dirname(__file__), "../scripts/create_acp_client.sh")
 
 
-def generate_agent_oapi(manifest: AgentManifest):
-    spec_dict, base_uri = read_from_filename(ACP_SPEC_PATH)
-
-    # If no exception is raised by validate(), the spec is valid.
-    validate(spec_dict)
-
-    spec_dict['info']['title'] = f"ACP Spec for {manifest.metadata.ref.name}:{manifest.metadata.ref.version}"
-
-    spec_dict['components']['schemas']["InputSchema"] = manifest.specs.input
-    spec_dict['components']['schemas']["OutputSchema"] = manifest.specs.output
-    spec_dict['components']['schemas']["ConfigSchema"] = manifest.specs.config
+def _gen_oas_thread_runs(manifest: AgentManifest, spec_dict):
+    # Manipulate the spec according to the thread capability flag in the manifest
 
     if manifest.specs.capabilities.threads:
         if manifest.specs.thread_state:
             spec_dict['components']['schemas']["ThreadStateSchema"] = manifest.specs.thread_state
         else:
+            # No thread schema defined, hence no support to retrieve thread state
             del spec_dict['paths']['/threads/{thread_id}/state']
             del spec_dict['paths']['/runs/{run_id}/threadstate']
     else:
+        # Threads are not enabled
         if manifest.specs.thread_state:
             raise ManifestValidationException(
                 "Cannot define `specs.thread_state` if `specs.capabilities.threads` is `false`")
         else:
+            # Remove all threads paths
             spec_dict['tags'] = [tag for tag in spec_dict['tags'] if tag['name'] != 'Threads']
             del spec_dict['paths']['/threads']
             del spec_dict['paths']['/threads/search']
@@ -49,9 +43,15 @@ def generate_agent_oapi(manifest: AgentManifest):
             del spec_dict['paths']['/threads/{thread_id}/state']
             del spec_dict['paths']['/runs/{run_id}/threadstate']
 
+
+def _gen_oas_interrupts(manifest: AgentManifest, spec_dict):
+    # Manipulate the spec according to the interrupts capability flag in the manifest
+
     if manifest.specs.capabilities.interrupts:
         if not manifest.specs.interrupts or len(manifest.specs.interrupts) == 0:
             raise ManifestValidationException("Missing interrupt definitions with `spec.capabilities.interrupts=true`")
+
+        # Add the interrupt payload and resume payload types for the schemas declared in the manifest
         spec_dict['components']['schemas']['InterruptPayloadSchema'] = {
             'oneOf': [],
             'discriminator': {
@@ -96,8 +96,11 @@ def generate_agent_oapi(manifest: AgentManifest):
             spec_dict['components']['schemas'][resume_payload_schema_name] = copy.deepcopy(interrupt.resume_payload)
 
     else:
+        # Interrupts are not supported 
+
         if manifest.specs.interrupts and len(manifest.specs.interrupts) > 0:
             raise ManifestValidationException("Interrupts defined with `spec.capabilities.interrupts=false`")
+
         # Remove interrupt support from API
         del spec_dict['paths']['/runs/{run_id}']['post']
         interrupt_ref = spec_dict['components']['schemas']['RunOutput']['discriminator']['mapping']['interrupt']
@@ -105,6 +108,70 @@ def generate_agent_oapi(manifest: AgentManifest):
         spec_dict['components']['schemas']['RunOutput']['oneOf'] = [e for e in
                                                                     spec_dict['components']['schemas']['RunOutput'][
                                                                         'oneOf'] if e['$ref'] != interrupt_ref]
+
+
+def _gen_oas_streaming(manifest: AgentManifest, spec_dict):
+    # Manipulate the spec according to the streaming capability flag in the manifest
+    streaming_modes = []
+    if manifest.specs.capabilities.streaming:
+        if manifest.specs.capabilities.streaming.custom: streaming_modes.append(StreamingMode.custom)
+        if manifest.specs.capabilities.streaming.result: streaming_modes.append(StreamingMode.result)
+
+    # Perform the checks for custom_streaming_update
+    if StreamingMode.custom not in streaming_modes and manifest.specs.custom_streaming_update:
+        raise ManifestValidationException(
+            "custom_streaming_update defined with `spec.capabilities.streaming.custom=false`")
+
+    if StreamingMode.custom in streaming_modes and not manifest.specs.custom_streaming_update:
+        raise ManifestValidationException(
+            "Missing custom_streaming_update definitions with `spec.capabilities.streaming.custom=true`")
+
+    if len(streaming_modes) == 0:
+        # No streaming is supported. Removing streaming method.
+        del spec_dict['paths']['/runs/{run_id}/stream']
+        # Removing streaming option from RunCreate
+        del spec_dict['components']['schemas']['RunCreate']['properties']['streaming']
+        return
+
+    if len(streaming_modes) == 2:
+        # Nothing to do
+        return
+
+    # If we reach this point only 1 streaming mode is supported, hence we need to restrict the APIs only to accept it and not the other.
+    assert (len(streaming_modes) == 1)
+
+    supported_mode = streaming_modes[0].value
+    spec_dict['components']['schemas']['StreamingMode']['enum'] = [supported_mode]
+    spec_dict['components']['schemas']['RunOutputStream']['properties']['data']['$ref'] = \
+    spec_dict['components']['schemas']['RunOutputStream']['properties']['data']['discriminator']['mapping'][
+        supported_mode]
+    del spec_dict['components']['schemas']['RunOutputStream']['properties']['data']['oneOf']
+    del spec_dict['components']['schemas']['RunOutputStream']['properties']['data']['discriminator']['mapping']
+
+
+def _gen_oas_callback(manifest: AgentManifest, spec_dict):
+    # Manipulate the spec according to the callback capability flag in the manifest
+    if not manifest.specs.capabilities.callbacks:
+        # No streaming is supported. Removing callback option from RunCreate
+        del spec_dict['components']['schemas']['RunCreate']['properties']['webhook']
+
+
+def generate_agent_oapi(manifest: AgentManifest):
+    spec_dict, base_uri = read_from_filename(ACP_SPEC_PATH)
+
+    # If no exception is raised by validate(), the spec is valid.
+    validate(spec_dict)
+
+    spec_dict['info']['title'] = f"ACP Spec for {manifest.metadata.ref.name}:{manifest.metadata.ref.version}"
+
+    spec_dict['components']['schemas']["InputSchema"] = manifest.specs.input
+    spec_dict['components']['schemas']["OutputSchema"] = manifest.specs.output
+    spec_dict['components']['schemas']["ConfigSchema"] = manifest.specs.config
+
+    _gen_oas_thread_runs(manifest, spec_dict)
+    _gen_oas_interrupts(manifest, spec_dict)
+    _gen_oas_streaming(manifest, spec_dict)
+    _gen_oas_callback(manifest, spec_dict)
 
     validate(spec_dict)
     return spec_dict
