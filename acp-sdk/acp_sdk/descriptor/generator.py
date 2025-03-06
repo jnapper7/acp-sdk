@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import os
 
-from acp_sdk.models.models import AgentACPDescriptor, StreamingMode
+from acp_sdk.models import AgentACPDescriptor, StreamingMode
 import yaml
 from openapi_spec_validator import validate
 from openapi_spec_validator.readers import read_from_filename
@@ -114,15 +114,15 @@ def _gen_oas_streaming(descriptor: AgentACPDescriptor, spec_dict):
     # Manipulate the spec according to the streaming capability flag in the descriptor
     streaming_modes = []
     if descriptor.specs.capabilities.streaming:
-        if descriptor.specs.capabilities.streaming.custom: streaming_modes.append(StreamingMode.custom)
-        if descriptor.specs.capabilities.streaming.result: streaming_modes.append(StreamingMode.result)
+        if descriptor.specs.capabilities.streaming.custom: streaming_modes.append(StreamingMode.CUSTOM)
+        if descriptor.specs.capabilities.streaming.result: streaming_modes.append(StreamingMode.RESULT)
 
     # Perform the checks for custom_streaming_update
-    if StreamingMode.custom not in streaming_modes and descriptor.specs.custom_streaming_update:
+    if StreamingMode.CUSTOM not in streaming_modes and descriptor.specs.custom_streaming_update:
         raise ACPDescriptorValidationException(
             "custom_streaming_update defined with `spec.capabilities.streaming.custom=false`")
 
-    if StreamingMode.custom in streaming_modes and not descriptor.specs.custom_streaming_update:
+    if StreamingMode.CUSTOM in streaming_modes and not descriptor.specs.custom_streaming_update:
         raise ACPDescriptorValidationException(
             "Missing custom_streaming_update definitions with `spec.capabilities.streaming.custom=true`")
 

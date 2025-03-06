@@ -1,39 +1,75 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 Cisco and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
+ACP_SPEC_RELEASE?=main
+ACP_SPEC_DIR?=acp-sdk/acp_sdk/acp-spec
 
+ACP_CLIENT_DIR=acp-client
+ACP_ASYNC_CLIENT_DIR=acp-async-client
+
+.PHONY: default install generate_acp_client \
+	generate_acp_server generate install_test test check all \
+	generate_async_acp_client
+
+default: test
 install: 
-	cd acp-sdk && poetry install
+	cd acp-sdk && poetry sync --without generate_server
 
-generate_sdk_models:
-	cd acp-sdk && poetry run datamodel-codegen \
-		--input acp_sdk/acp-spec/openapi.yaml \
-		--input-file-type openapi \
-		--output-model-type pydantic_v2.BaseModel \
-		--output acp_sdk/models/models.py \
-		--disable-timestamp
+$(ACP_SPEC_DIR)/openapi.yaml: 
+	git submodule update $(ACP_SPEC_DIR)
 
-generate_acp_client:
+# Generate client and correct models for convenience.
+generate_acp_client: $(ACP_SPEC_DIR)/openapi.yaml
+	ACP_SPEC_VERSION=$$(yq '.info.version | sub("\.", "_")' $(ACP_SPEC_DIR)/openapi.yaml) ; \
 	docker run --rm \
 	-v ${PWD}:/local openapitools/openapi-generator-cli generate \
-	-i local/acp-sdk/acp_sdk/acp-spec/openapi.yaml \
-	--package-name acp_client \
+	-i local/$(ACP_SPEC_DIR)/openapi.yaml \
+	--package-name acp_client_v$${ACP_SPEC_VERSION} \
+	"--additional-properties=library=urllib3" \
 	-g python \
-	-o local/acp-client
+	-o local/$(ACP_CLIENT_DIR) && \
+	for pyfile in $$(find $(ACP_CLIENT_DIR) -name '*.py'); do \
+	   { cat .spdx_header $${pyfile} ; } > $${pyfile}.bak && mv $${pyfile}.bak $${pyfile} ; \
+	done && \
+	sed -i '' -E -e 's/acp_client_v'$${ACP_SPEC_VERSION}'\.models\././' \
+	  $(ACP_CLIENT_DIR)/acp_client_v$${ACP_SPEC_VERSION}/models/*.py && \
+	sed -i '' -E -e 's/acp_client_v'$${ACP_SPEC_VERSION}'\././' \
+	  $(ACP_CLIENT_DIR)/acp_client_v$${ACP_SPEC_VERSION}/*.py
 
-generate_acp_server:
+generate_acp_async_client: $(ACP_SPEC_DIR)/openapi.yaml
+	ACP_SPEC_VERSION=$$(yq '.info.version | sub("\.", "_")' $(ACP_SPEC_DIR)/openapi.yaml) ; \
+	docker run --rm \
+	-v ${PWD}:/local openapitools/openapi-generator-cli generate \
+	-i local/$(ACP_SPEC_DIR)/openapi.yaml \
+	--package-name acp_async_client_v$${ACP_SPEC_VERSION} \
+	"--additional-properties=library=asyncio" \
+	-g python \
+	-o local/$(ACP_ASYNC_CLIENT_DIR) && \
+	for pyfile in $$(find $(ACP_ASYNC_CLIENT_DIR) -name '*.py'); do \
+	   { cat .spdx_header $${pyfile} ; } > $${pyfile}.bak && mv $${pyfile}.bak $${pyfile} ; \
+	done && \
+	sed -i '' -E -e 's/acp_async_client_v'$${ACP_SPEC_VERSION}'\.models\././' \
+	  $(ACP_ASYNC_CLIENT_DIR)/acp_async_client_v$${ACP_SPEC_VERSION}/models/*.py && \
+	sed -i '' -E -e 's/acp_async_client_v'$${ACP_SPEC_VERSION}'\././' \
+	  $(ACP_ASYNC_CLIENT_DIR)/acp_async_client_v$${ACP_SPEC_VERSION}/*.py
+
+generate_acp_server: $(ACP_SPEC_DIR)/openapi.yaml
 	poetry new acp-server-stub
 	cd acp-server-stub && poetry add fastapi
 	cd acp-sdk && \
-	poetry run fastapi-codegen --input ../acp-sdk/acp_sdk/acp-spec/openapi.yaml \
+	poetry sync --with generate_server && \
+	poetry run fastapi-codegen --input ../$(ACP_SPEC_DIR)/openapi.yaml \
 	--output-model-type pydantic_v2.BaseModel \
 	--output ../acp-server-stub/acp_server_stub \
 	--generate-routers \
 	--disable-timestamp
 
 
-generate: generate_sdk_models generate_acp_client generate_acp_server
+generate: generate_acp_client generate_acp_server
 
-test: install generate_sdk_models
+install_test: 
+	cd acp-sdk && poetry sync --with test --without generate_server
+
+test: install_test
 	make -C acp-sdk test
 
 check: test

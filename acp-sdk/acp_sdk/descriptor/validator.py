@@ -4,7 +4,7 @@ import json
 
 from pydantic import ValidationError
 
-from acp_sdk.models.models import AgentACPDescriptor
+from ..models import AgentACPDescriptor
 from .generator import generate_agent_oapi
 from .exceptions import ACPDescriptorValidationException
 
