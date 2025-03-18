@@ -1,14 +1,18 @@
 # SPDX-FileCopyrightText: Copyright (c) 2025 Cisco and/or its affiliates.
 # SPDX-License-Identifier: Apache-2.0
-from .acp_v0.sync_client.api import AgentsApi, RunsApi, ThreadsApi
-from .acp_v0.sync_client import ApiClient
-from .acp_v0.async_client.api import AgentsApi as AsyncAgentsApi
-from .acp_v0.async_client.api import RunsApi as AsyncRunsApi
-from .acp_v0.async_client.api import ThreadsApi as AsyncThreadsApi
+from .acp_v0.sync_client import ApiClient, AgentsApi, RunsApi, ThreadsApi
+from .acp_v0.async_client import AgentsApi as AsyncAgentsApi
+from .acp_v0.async_client import RunsApi as AsyncRunsApi
+from .acp_v0.async_client import ThreadsApi as AsyncThreadsApi
 from .acp_v0.async_client import ApiClient as AsyncApiClient
 from .acp_v0 import ApiResponse
 from .acp_v0 import Configuration
-from .acp_v0.spec_version import ACP_VERSION, ACP_MAJOR_VERSION, ACP_MINOR_VERSION
+from .acp_v0.spec_version import VERSION as ACP_VERSION
+from .acp_v0.spec_version import MAJOR_VERSION as ACP_MAJOR_VERSION
+from .acp_v0.spec_version import MINOR_VERSION as ACP_MINOR_VERSION
+from .agws_v0.spec_version import VERSION as AGWS_VERSION
+from .agws_v0.spec_version import MAJOR_VERSION as AGWS_MAJOR_VERSION
+from .agws_v0.spec_version import MINOR_VERSION as AGWS_MINOR_VERSION
 
 class ACPClient(AgentsApi, RunsApi, ThreadsApi):
     def __init__(self, api_client: ApiClient | None = None):
@@ -52,4 +56,7 @@ __all__ = [
     "ACP_VERSION",
     "ACP_MAJOR_VERSION",
     "ACP_MINOR_VERSION",
+    "AGWS_VERSION",
+    "AGWS_MINOR_VERSION",
+    "AGWS_MAJOR_VERSION",
 ]
