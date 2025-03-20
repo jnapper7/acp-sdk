@@ -58,37 +58,25 @@ generate_acp_async_client $(ACP_ASYNC_CLIENT_DIR)/README.md : $(ACP_SPEC_FILE)
 	done
 
 AGENT_WORKFLOW_DIR:=workflow-srv-mgr
-AGENT_WORKFLOW_CLIENT_DIR?=workflow-srv-mgr-client-generated
-GEN_AGENT_WORKFLOW_PACKAGE_PREFIX:=workflow_srv_v
-SDK_AGENT_WORKFLOW_SUBPACKAGE_PREFIX:=agws_v
 AGNT_WKFW_SPEC_FILE:=$(AGENT_WORKFLOW_DIR)/wfsm/spec/manifest.yaml
-AGNT_WKFW_ACP_SPEC_FILE:=$(AGENT_WORKFLOW_DIR)/wfsm/spec/acp-spec/openapi.yaml
 
 $(AGNT_WKFW_SPEC_FILE):
 	git submodule update $(AGENT_WORKFLOW_DIR)
 
-generate_manifest_models $(AGENT_WORKFLOW_CLIENT_DIR)/README.md : $(AGNT_WKFW_SPEC_FILE)
-	ACP_SPEC_VERSION=$$(yq '.info.version' $(ACP_SPEC_FILE)) ; \
-	AGNT_WKFW_ACP_SPEC_VERSION=$$(yq '.info.version' $(AGNT_WKFW_ACP_SPEC_FILE)) ; \
-	if [ "$${ACP_SPEC_VERSION}" != "$${AGNT_WKFW_ACP_SPEC_VERSION}" ] ; then \
-	  { echo "ERROR: ACP spec version $${ACP_SPEC_VERSION} != $${AGNT_WKFW_ACP_SPEC_VERSION} ACP version in manifest" ; exit 1 ; } ; \
-	fi ; \
-	export SPEC_FILE="$(AGNT_WKFW_SPEC_FILE)" ; \
-	export SPEC_VERSION=$$(yq '.info.version | sub("\.\d+", "")' "$${SPEC_FILE}") ; \
-	export CLIENT_DIR="$(AGENT_WORKFLOW_CLIENT_DIR)" ; \
-	export GEN_PACKAGE_NAME="$(GEN_AGENT_WORKFLOW_PACKAGE_PREFIX)$${SPEC_VERSION}" ; \
-	export SDK_SUBPACKAGE_NAME="$(SDK_AGENT_WORKFLOW_SUBPACKAGE_PREFIX)$${SPEC_VERSION}" ; \
-	./scripts/openapi_generate_client.sh && \
-	for genfile in $$(find "$${CLIENT_DIR}" -name '*.py'); do \
-		sed -i '' -E -e "s/$${GEN_PACKAGE_NAME}/agntcy_acp.$${SDK_SUBPACKAGE_NAME}/" "$${genfile}" ; \
-	done
+generate_manifest_models: $(AGNT_WKFW_SPEC_FILE)
+	ACP_SPEC_VERSION=$$(yq '.info.version | sub("\.\d+", "")' $(AGNT_WKFW_SPEC_FILE)) ; \
+	AGNT_WKFW_MODEL_PACKAGE_DIR="agntcy_acp/agws_v$${ACP_SPEC_VERSION}" ; \
+	poetry run datamodel-codegen \
+		--input $(AGNT_WKFW_SPEC_FILE) \
+		--input-file-type openapi \
+		--output-model-type pydantic_v2.BaseModel \
+		--output "$${AGNT_WKFW_MODEL_PACKAGE_DIR}"/models.py \
+		--disable-timestamp
 
-update_python_subpackage: $(ACP_CLIENT_DIR)/README.md $(ACP_ASYNC_CLIENT_DIR)/README.md $(AGENT_WORKFLOW_CLIENT_DIR)/README.md
+update_python_subpackage: $(ACP_CLIENT_DIR)/README.md $(ACP_ASYNC_CLIENT_DIR)/README.md
 	ACP_SPEC_VERSION=$$(yq '.info.version | sub("\.\d+", "")' $(ACP_SPEC_FILE)) ; \
 	ACP_CLIENT_PACKAGE_DIR="$(ACP_CLIENT_DIR)/$(GEN_ACP_SYNC_PACKAGE_PREFIX)$${ACP_SPEC_VERSION}" ; \
 	ACP_ASYNC_CLIENT_PACKAGE_DIR="$(ACP_ASYNC_CLIENT_DIR)/$(GEN_ACP_ASYNC_PACKAGE_PREFIX)$${ACP_SPEC_VERSION}" ; \
-	AGNT_WKFW_SPEC_VERSION=$$(yq '.info.version | sub("\.\d+", "")' $(AGNT_WKFW_SPEC_FILE)) ; \
-	AGNT_WKFW_CLIENT_PACKAGE_DIR="$(AGENT_WORKFLOW_CLIENT_DIR)/$(GEN_AGENT_WORKFLOW_PACKAGE_PREFIX)$${AGNT_WKFW_SPEC_VERSION}" ; \
 	cp -pR "$${ACP_CLIENT_PACKAGE_DIR}/__init__.py" \
 		"$${ACP_CLIENT_PACKAGE_DIR}/exceptions.py" \
 		"$${ACP_CLIENT_PACKAGE_DIR}/configuration.py" \
@@ -104,15 +92,10 @@ update_python_subpackage: $(ACP_CLIENT_DIR)/README.md $(ACP_ASYNC_CLIENT_DIR)/RE
 		"$${ACP_ASYNC_CLIENT_PACKAGE_DIR}/api_client.py" \
 		"$${ACP_ASYNC_CLIENT_PACKAGE_DIR}/rest.py" \
 		"agntcy_acp/$(ACP_SUBPACKAGE_PREFIX)$${ACP_SPEC_VERSION}/$(SDK_ACP_ASYNC_PACKAGE_NAME)/" && \
-	cp -p "$${AGNT_WKFW_CLIENT_PACKAGE_DIR}"/spec_version.py \
-		"agntcy_acp/$(SDK_AGENT_WORKFLOW_SUBPACKAGE_PREFIX)$${AGNT_WKFW_SPEC_VERSION}/" && \
-	cp -p "$${AGNT_WKFW_CLIENT_PACKAGE_DIR}"/models/*.py \
-		"agntcy_acp/$(SDK_AGENT_WORKFLOW_SUBPACKAGE_PREFIX)$${AGNT_WKFW_SPEC_VERSION}/models/"
 
-update_docs: $(ACP_CLIENT_DIR)/README.md $(ACP_ASYNC_CLIENT_DIR)/README.md $(AGENT_WORKFLOW_CLIENT_DIR)/README.md
+update_docs: $(ACP_CLIENT_DIR)/README.md $(ACP_ASYNC_CLIENT_DIR)/README.md
 	cp -p "$(ACP_CLIENT_DIR)"/docs/*.md docs/models/ && \
-	cp -p "$(ACP_ASYNC_CLIENT_DIR)"/docs/*.md docs/models/ && \
-	cp -p "$(AGENT_WORKFLOW_CLIENT_DIR)"/docs/*.md docs/models/
+	cp -p "$(ACP_ASYNC_CLIENT_DIR)"/docs/*.md docs/models/
 
 
 generate: generate_acp_client generate_acp_server
