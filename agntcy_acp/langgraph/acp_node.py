@@ -115,6 +115,7 @@ class ACPNode():
         return state
 
     def invoke(self, state: Any, config: RunnableConfig) -> Any:
+
         run_create = self._prepare_run_create(state, config)
 
         api_client = ApiClient(configuration=self.clientConfig)

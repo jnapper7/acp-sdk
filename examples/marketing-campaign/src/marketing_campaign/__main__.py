@@ -2,6 +2,7 @@ from marketing_campaign.app import graph
 from marketing_campaign.state import OverallState, ConfigModel
 from marketing_campaign import mailcomposer
 from marketing_campaign.email_reviewer import TargetAudience
+import os
 
 
 def main():
@@ -18,7 +19,7 @@ def main():
             "configurable": {
                 "thread_id": "foo",
                 "config": ConfigModel(
-                    recipient_email_address="Giovanni Conte <giconte@cisco.com>",
+                    recipient_email_address=os.environ.get("RECIPIENT_EMAIL_ADDRESS", "Alessandro Duminuco <aduminuc@cisco.com>"),
                     sender_email_address="casey.agntcy.demo@gmail.com",
                     target_audience=TargetAudience.academic
                 ).model_dump(),
