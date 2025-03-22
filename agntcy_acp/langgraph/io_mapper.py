@@ -1,3 +1,5 @@
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
+# SPDX-License-Identifier: Apache-2.0
 import logging
 from agntcy_iomapper import IOMappingAgentMetadata, IOMappingAgent
 from langchain_core.language_models import BaseChatModel

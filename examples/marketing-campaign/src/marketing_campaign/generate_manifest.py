@@ -1,3 +1,5 @@
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
+# SPDX-License-Identifier: Apache-2.0
 from pathlib import Path
 from pydantic import AnyUrl
 from marketing_campaign.state import OverallState, ConfigModel

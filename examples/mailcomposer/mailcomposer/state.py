@@ -1,4 +1,5 @@
-
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
+# SPDX-License-Identifier: Apache-2.0
 from typing_extensions import TypedDict
 from enum import Enum
 from typing import List, Optional

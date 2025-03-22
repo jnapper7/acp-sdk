@@ -1,3 +1,5 @@
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
+# SPDX-License-Identifier: Apache-2.0
 # Generated from ACP Descriptor org.agntcy.mailcomposer using datamodel_code_generator.
 
 from __future__ import annotations

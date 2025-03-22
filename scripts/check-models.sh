@@ -1,6 +1,6 @@
-#!/usr/bin/env bash 
+#!/usr/bin/env bash
 
-# SPDX-FileCopyrightText: Copyright (c) 2025 Cisco and/or its affiliates.
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
 # SPDX-License-Identifier: Apache-2.0
 
 CHANGED_FILES="$(git status --porcelain)"

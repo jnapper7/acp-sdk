@@ -1,3 +1,5 @@
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
+# SPDX-License-Identifier: Apache-2.0
 import os
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
 from langgraph.graph import StateGraph, START, END

@@ -1,4 +1,6 @@
 #!/bin/sh
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
+# SPDX-License-Identifier: Apache-2.0
 set -x
 
 SPEC_FILE=${SPEC_FILE:-acp-spec/openapi.yaml}

@@ -1,3 +1,5 @@
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
+# SPDX-License-Identifier: Apache-2.0
 import agntcy_acp.langgraph.acp_node
 from agntcy_acp.langgraph.api_bridge import APIBridgeOutput, APIBridgeInput
 from pydantic import BaseModel, Field

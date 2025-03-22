@@ -1,3 +1,5 @@
+# Copyright AGNTCY Contributors (https://github.com/agntcy)
+# SPDX-License-Identifier: Apache-2.0
 import asyncio
 from typing import Any, Optional
 from pydantic import BaseModel, Field
