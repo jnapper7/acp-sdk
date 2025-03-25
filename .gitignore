@@ -7,6 +7,7 @@ ___*
 *.code-workspace
 *_graph.png
 *.env
+*.env.yaml
 venv
 .venv
 /acp-sync-client-generated

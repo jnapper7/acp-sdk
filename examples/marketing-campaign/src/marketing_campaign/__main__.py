@@ -1,13 +1,14 @@
 # Copyright AGNTCY Contributors (https://github.com/agntcy)
 # SPDX-License-Identifier: Apache-2.0
+import os
+import asyncio
 from marketing_campaign.app import graph
 from marketing_campaign.state import OverallState, ConfigModel
 from marketing_campaign import mailcomposer
 from marketing_campaign.email_reviewer import TargetAudience
-import os
 
 
-def main():
+async def main():
     print("What marketing campaign do you want to create?")
     inputState = OverallState(
         messages=[],
@@ -17,15 +18,12 @@ def main():
     while True:
         usermsg = input("YOU [Type OK when you are happy with the email proposed] >>> ")
         inputState.messages.append(mailcomposer.Message(content=usermsg, type=mailcomposer.Type.human))
-        output = graph.invoke(inputState, {
-            "configurable": {
-                "thread_id": "foo",
-                "config": ConfigModel(
-                    recipient_email_address=os.environ.get("RECIPIENT_EMAIL_ADDRESS", "Alessandro Duminuco <aduminuc@cisco.com>"),
-                    sender_email_address="casey.agntcy.demo@gmail.com",
-                    target_audience=TargetAudience.academic
-                ).model_dump(),
-            }
+        output = await graph.ainvoke(inputState, {
+            "configurable": ConfigModel(
+                recipient_email_address=os.environ["RECIPIENT_EMAIL_ADDRESS"],
+                sender_email_address=os.environ["SENDER_EMAIL_ADDRESS"],
+                target_audience=TargetAudience.academic
+            ).model_dump()
         })
 
         outputState = OverallState.model_validate(output)
@@ -37,5 +35,5 @@ def main():
         inputState = outputState
 
 
-
-main()
+if __name__ == "__main__":
+    asyncio.run(main())

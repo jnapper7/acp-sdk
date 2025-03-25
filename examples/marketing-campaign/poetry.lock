@@ -2,14 +2,14 @@
 
 [[package]]
 name = "agntcy-acp"
-version = "0.1.0a2"
+version = "0.1.0a2.dev0"
 description = "Agent Connect Protocol SDK"
 optional = false
 python-versions = "<4.0,>=3.9.0"
 groups = ["main"]
 files = [
-    {file = "agntcy_acp-0.1.0a2-py3-none-any.whl", hash = "sha256:09f98b4afa584e3d2601dbe03e791cdb5e5685fe3b3eb290bde42a637bf74a0d"},
-    {file = "agntcy_acp-0.1.0a2.tar.gz", hash = "sha256:92dc360777e49533df22f77c0869ec3d0133cbcb6072be53f3fb12249d1fdaea"},
+    {file = "agntcy_acp-0.1.0a2.dev0-py3-none-any.whl", hash = "sha256:cda6c5ef850b4eefd7422d409a30b02a85af746e86e5a051d0c93c937c7412b4"},
+    {file = "agntcy_acp-0.1.0a2.dev0.tar.gz", hash = "sha256:b3fa35ac75b4aa8ff0d3f29cc087afc672fa6c1bfaecc120988703459d165555"},
 ]
 
 [package.dependencies]
@@ -4166,4 +4166,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9.0,<4.0"
-content-hash = "0ca290260f47486037a8107ce9773fe5fe87ef9dce3fedd87933a45cd3fac800"
+content-hash = "f9b6e15cc79f08a8a1839e9a1ff35443404a6da895e1a4f0429c3277de91b5a8"

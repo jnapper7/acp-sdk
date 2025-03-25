@@ -822,7 +822,7 @@
       {
         "type": "source_code",
         "name": "source_code_local",
-        "url": "file://../",
+        "url": "file://./marketing-campaign",
         "framework_config": {
           "framework_type": "langgraph",
           "graph": "marketing_campaign.app:graph"
@@ -845,19 +845,19 @@
     ],
     "dependencies": [
       {
-        "name": "mailcomposer1",
+        "name": "mailcomposer",
         "ref": {
           "name": "org.agntcy.mailcomposer",
           "version": "0.0.1",
-          "url": "file://mailcomposer.json/"
+          "url": "./mailcomposer/deploy/mailcomposer.json"
         }
       },
       {
-        "name": "email_reviewer1",
+        "name": "email_reviewer",
         "ref": {
           "name": "org.agntcy.email_reviewer",
           "version": "0.0.1",
-          "url": "file://email_reviewer.json/"
+          "url": "./email_reviewer/deploy/email_reviewer.json"
         }
       }
     ]
