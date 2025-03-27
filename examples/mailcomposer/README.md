@@ -1,22 +1,30 @@
-# Compose Email Agent
+# Email Composer Agent
 
-The Compose Email Agent is built using LangGraph to facilitate interactive email composition.
-It collects email details by continuously interacting with the user until tha latter confirm that the email is ready, then provides the finalized email text.
-
-## Features
-
-- Utilizes Azure OpenAI to guide email composition.
-- Demonstrates the use of LangGraph for managing conversational state and flow.
-- Provides a LangGraph server setup for interacting via ACP protocol APIs.
+The Email Composer Agent is a demonstration AI agent developed with LangGraph, designed to assist in the composition of emails. 
+It gathers necessary email details through ongoing user engagement in a chat format until the user affirms that the email is complete. Subsequently, it delivers the finalized email text.
 
 ## Prerequisites
 
 Before running the application, ensure you have the following:
 
-- **Azure OpenAI API Key**: Set up as an environment variable.
-- **Poetry**: A tool for dependency management and packaging in Python.
+- **Azure OpenAI API Key**
+- **Python 3.9 or higher**
+- **Poetry**
 
+## Running the Email Agent directly
+* Install dependencies
+    ```
+    poetry install
+    ```
 
+* Run the agent
+    ```
+    export AZURE_OPENAI_MODEL=gpt-4o-mini
+    export AZURE_OPENAI_API_KEY=***YOUR_OPENAI_API_KEY***
+    export AZURE_OPENAI_ENDPOINT=***YOUR_OPENAI_ENDPOINT***
+    export OPENAI_API_VERSION=2024-07-01-preview 
+    poetry run python main.py 
+    ```
 
 ## Running the Email Agent using Agent Workflow Server
 
@@ -25,7 +33,7 @@ Before running the application, ensure you have the following:
     echo "
     AZURE_OPENAI_MODEL=gpt-4o-mini
     AZURE_OPENAI_API_KEY=***YOUR_OPENAI_API_KEY***
-    AZURE_OPENAI_ENDPOINT=https://smith-project-agents.openai.azure.com
+    AZURE_OPENAI_ENDPOINT=***YOUR_OPENAI_ENDPOINT***
     OPENAI_API_VERSION=2024-07-01-preview 
     API_HOST=0.0.0.0
     " > deploy/.mailcomposer.env
