@@ -3,7 +3,7 @@
 The Marketing Campaign Manager is a demonstration AI agent developed with LangGraph, designed to assist in composing and sending emails for a marketing campaign.
 
 It performs the following actions:
-* It gathers necessary caampaign details from the user through a chat.
+* It gathers necessary campaign details from the user through a chat.
 * Compose an email leveraging the [Email Composer Agent](../mailcomposer/) as a remote ACP agent.
 * It leverages the [IO Mapper Agent](https://github.com/agntcy/iomapper-agnt) to adapt Email Composer Agent output to Email Reviewer Agent.
 * Reviews the email leveraging the [Email Reviewer Agent](../email_reviewer/) as a remote ACP agent.
