@@ -7,7 +7,7 @@ It performs the following actions:
 * Compose an email leveraging the [Email Composer Agent](../mailcomposer/) as a remote ACP agent.
 * It leverages the [IO Mapper Agent](https://github.com/agntcy/iomapper-agnt) to adapt Email Composer Agent output to Email Reviewer Agent.
 * Reviews the email leveraging the [Email Reviewer Agent](../email_reviewer/) as a remote ACP agent.
-* Send the email to the configured recipient through Twilio sendgrid levaraging the [API Bridge Agent](https://github.com/agntcy/api-bridge-agnt)
+* Send the email to the configured recipient through Twilio sendgrid leveraging the [API Bridge Agent](https://github.com/agntcy/api-bridge-agnt)
 
 ## Prerequisites
 
