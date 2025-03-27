@@ -1,6 +1,6 @@
 # Email Reviewer
 
-The Email Reviewerr Agent is a demonstration AI agent developed with Llama-index, designed to review email to address a specific target audience.
+The Email Reviewer Agent is a demonstration AI agent developed with Llama-index, designed to review email to address a specific target audience.
 
 ## Requirements
 
