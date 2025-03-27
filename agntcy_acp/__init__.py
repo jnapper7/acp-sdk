@@ -4,11 +4,13 @@ import json
 from os import getenv
 from typing import Optional, Any, Dict, Union
 
-from .acp_v0.sync_client import ApiClient, AgentsApi, RunsApi, ThreadsApi
-from .acp_v0.async_client import AgentsApi as AsyncAgentsApi
-from .acp_v0.async_client import RunsApi as AsyncRunsApi
-from .acp_v0.async_client import ThreadsApi as AsyncThreadsApi
-from .acp_v0.async_client import ApiClient as AsyncApiClient
+from .acp_v0.sync_client.api_client import ApiClient
+from .acp_v0.sync_client.api import AgentsApi, ThreadsApi, StatelessRunsApi, ThreadRunsApi
+from .acp_v0.async_client.api import AgentsApi as AsyncAgentsApi
+from .acp_v0.async_client.api import StatelessRunsApi as AsyncStatelessRunsApi
+from .acp_v0.async_client.api import ThreadsApi as AsyncThreadsApi
+from .acp_v0.async_client.api import ThreadRunsApi as AsyncThreadRunsApi
+from .acp_v0.async_client.api_client import ApiClient as AsyncApiClient
 from .acp_v0 import ApiResponse
 from .acp_v0 import Configuration
 from .acp_v0.configuration import ServerVariablesT
@@ -26,19 +28,44 @@ from agntcy_acp.acp_v0.exceptions import (
     ApiKeyError,
     ApiAttributeError,
     ApiException,
+    BadRequestException,
+    NotFoundException,
+    UnauthorizedException,
+    ForbiddenException,
+    ServiceException,
+    ConflictException,
+    UnprocessableEntityException,
 )
 
-class ACPClient(AgentsApi, RunsApi, ThreadsApi):
+class ACPClient(AgentsApi, StatelessRunsApi, ThreadsApi, ThreadRunsApi):
     """Client for ACP API.
     """
     def __init__(self, api_client: Optional[ApiClient] = None):
         super().__init__(api_client)
+        self.__workflow_server_update_api_client()
 
-class AsyncACPClient(AsyncAgentsApi, AsyncRunsApi, AsyncThreadsApi):
+    def __workflow_server_update_api_client(self):
+        if self.api_client.configuration.api_key is not None:
+            # Check for 'x-api-key' config and move to header.
+            try:
+                self.api_client.default_headers['x-api-key'] = self.api_client.configuration.api_key['x-api-key']
+            except KeyError:
+                pass # ignore
+
+class AsyncACPClient(AsyncAgentsApi, AsyncStatelessRunsApi, AsyncThreadsApi, AsyncThreadRunsApi):
     """Async client for ACP API.
     """
     def __init__(self, api_client: Optional[AsyncApiClient] = None):
         super().__init__(api_client)
+        self.__workflow_server_update_api_client()
+    
+    def __workflow_server_update_api_client(self):
+        if self.api_client.configuration.api_key is not None:
+            # Check for 'x-api-key' config and move to header.
+            try:
+                self.api_client.default_headers['x-api-key'] = self.api_client.configuration.api_key['x-api-key']
+            except KeyError:
+                pass # ignore
 
 __ENV_VAR_SPECIAL_CHAR_TABLE = str.maketrans("-.", "__")
 
@@ -73,6 +100,7 @@ class ApiClientConfiguration(Configuration):
     :param ca_cert_data: verify the peer using concatenated CA certificate data
       in PEM (str) or DER (bytes) format.
     :param debug: Debug switch.
+
     """
     def __init__(
         self, 
@@ -115,12 +143,13 @@ class ApiClientConfiguration(Configuration):
         debug: Optional[bool] = None,
     ) -> "ApiClientConfiguration":
         """Construct a configuration object using environment variables as
-        default source of parameter values.
+        default source of parameter values. For example, with env_var_prefix="MY_", 
+        the default host parameter value would be looked up in the "MY_HOST" 
+        environment variable if not provided.
 
         :param env_var_prefix: String used as prefix for environment variable 
-        names. For example, with env_var_prefix="MY_", the default host parameter
-        value would be looked up in the "MY_HOST" environment variable if not
-        provided.
+          names.
+
         :return: Configuration object
         :rtype: ApiClientConfiguration
         """
@@ -196,6 +225,13 @@ __all__ = [
     "ApiKeyError",
     "ApiAttributeError",
     "ApiException",
+    "BadRequestException",
+    "NotFoundException",
+    "UnauthorizedException",
+    "ForbiddenException",
+    "ServiceException",
+    "ConflictException",
+    "UnprocessableEntityException",
     "ACP_VERSION",
     "ACP_MAJOR_VERSION",
     "ACP_MINOR_VERSION",
