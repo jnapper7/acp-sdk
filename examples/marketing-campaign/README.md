@@ -100,6 +100,8 @@ make docker-build-dev
 Navigate to the `api-bridge-agnt` directory and run the following commands:
 
 ```sh
+export AZURE_OPENAI_API_KEY=***YOUR_OPENAI_API_KEY***
+export AZURE_OPENAI_ENDPOINT=***YOUR_OPENAI_ENDPOINT***
 make start_redis
 make start_tyk
 ```
@@ -128,13 +130,15 @@ Both methods allow users to interactively create a marketing campaign by providi
 
 An [IO Mapper Agent](https://github.com/agntcy/iomapper-agnt) is used in the application to automatically transform the output of the MailComposer to match the input of the EmailReviewer.
 
-The **ACP client** or **LangGraph** handles communication with the Marketing Campaign application, which orchestrates interactions with the dependent agents.
+The **ACP client** or **LangGraph** applications handle communication with the Marketing Campaign application, which orchestrates interactions with the dependent agents.
+
+All commands and scripts should be executed from the `examples/marketing-campaign` directory, where this guide is located.
 
 ### Prerequisites for Both Methods
 
 Before running the application, ensure the following prerequisites are met:
 
-1. **Bridge Agent**: The API Bridge Agent must be running as explained in Step 3 of the setup instructions.
+1. **Bridge Agent**: The API Bridge Agent must be running as explained in Step 4 of the setup instructions.
 2. **`wfsm` CLI**: The Workflow Server Manager CLI (`wfsm`) must be added to your system's PATH.
 3. **Dependencies**: Install Python dependencies in the `examples/marketing-campaign` directory:
    ```sh
@@ -146,7 +150,7 @@ Before running the application, ensure the following prerequisites are met:
 
 ### Method 1: Using the ACP Client
 
-This method demonstrates how to communicate with the Marketing Campaign application using the **ACP (Agent Connect Protocol) client**. The workflow server for the Marketing Campaign application must be started manually. Once running, it will automatically launch the workflow servers for its dependencies, **MailComposer** and **EmailReviewer**, as defined in the deployment configuration of the [marketing-campaign manifest](examples/marketing-campaign/deploy/marketing-campaign.json).
+This method demonstrates how to communicate with the Marketing Campaign application using the **ACP (Agent Connect Protocol) client**. The workflow server for the Marketing Campaign application must be started manually. Once running, it will automatically launch the workflow servers for its dependencies, **MailComposer** and **EmailReviewer**, as defined in the deployment configuration of the [marketing-campaign manifest](./deploy/marketing-campaign.json).
 
 #### Steps:
 
@@ -203,7 +207,8 @@ This method demonstrates how to communicate with the Marketing Campaign applicat
 4. **Run the Application**:
    Start the Marketing Campaign Manager application using the ACP client:
    ```sh
-   poetry run python examples/marketing-campaign/src/marketing_campaign/main_acp_client.py
+   cd src/marketing_campaign
+   poetry run python main_acp_client.py
    ```
 
    Interact with the application via ACP Client to compose and review emails. Once approved, the email will be sent to the recipient via SendGrid.
@@ -249,7 +254,8 @@ This script is primarily intended for development and debugging purposes, allowi
 3. **Run the Application**:
    Start the Marketing Campaign Manager application using LangGraph:
    ```sh
-   poetry run python examples/marketing-campaign/src/marketing_campaign/main_langgraph.py
+   cd src/marketing_campaign
+   poetry run python main_langgraph.py
    ```
 
    Interact by invoking the langgraph application to compose and review emails. Once approved, the email will be sent to the recipient via SendGrid.
@@ -258,7 +264,7 @@ This script is primarily intended for development and debugging purposes, allowi
 
 ### Additional Configuration
 
-In both main scripts, you can customize the target audience for the campaign by modifying the `target_audience` parameter `target_audience=TargetAudience.academic`. Available options are:
+In both scripts [main_acp_client.py](./src/marketing_campaign/main_acp_client.py) and [main_langgraph.py](./src/marketing_campaign/main_langgraph.py), you can customize the target audience for the campaign by modifying the `target_audience` parameter `target_audience=TargetAudience.academic`. Available options are:
 - `general`
 - `technical`
 - `business`
