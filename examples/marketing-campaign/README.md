@@ -1,6 +1,6 @@
 # Marketing Campaign Manager
 
-The **Marketing Campaign Manager** is a demonstration AI application developed with LangGraph. It assists in composing and sending emails for marketing campaigns by orchestrating multiple AI agents. This guide will walk you through the steps to set up and run the example application locally.
+The **Marketing Campaign Manager** is a demonstration AI application developed with LangGraph. It assists in composing and sending emails for marketing campaigns by interacting with multiple AI agents. This guide will walk you through the steps to set up and run the example application locally.
 
 ## Features
 
