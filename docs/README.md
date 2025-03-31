@@ -19,7 +19,7 @@ This is a generic client, because schemas for input, output, and configurations 
 ## ACP SDK CLI
 
 ```
-$ cd agtncy_acp
+$ cd agntcy_acp
 $ poetry run acp --help
 Usage: acp [OPTIONS] COMMAND [ARGS]...
 
