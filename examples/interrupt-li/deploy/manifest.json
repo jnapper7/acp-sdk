@@ -1,7 +1,7 @@
 {
   "metadata": {
     "ref": {
-      "name": "org.agntcy.interrupt",
+      "name": "org.agntcy.interrupt-li",
       "version": "0.0.1"
     },
     "description": "Agent Connect Protocol Interrupt (Human-In-The-Loop) Example"
@@ -38,6 +38,16 @@
           "required": [
             "ai_answer"
           ]
+        },
+        {
+          "properties": {
+            "interrupt": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "interrupt"
+          ]
         }
       ]
     },
@@ -58,11 +68,11 @@
     "deployment_options": [
       {
         "type": "source_code",
-        "name": "source_code_local",
-        "url": "file://.",
+        "name": "src",
+        "url": "github.com/cisco-eti/agent-connect-protocol.git/examples/agents/interrupt-li",
         "framework_config": {
-          "framework_type": "langgraph",
-          "graph": "interrupt.interrupt:graph"
+          "framework_type": "llamaindex",
+          "graph": "interrupt-li:interrupt_workflow"
         }
       }
     ]

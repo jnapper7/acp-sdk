@@ -1,0 +1,22 @@
+[project]
+name = "interrupt-li"
+version = "0.1.0"
+description = "Example Interrupt (Human-In-The-Loop) LlamaIndex Agent"
+authors = [
+    {name = "Marco Trinelli ", email = "mtrinell@cisco.com"}
+]
+readme = "README.md"
+
+[tool.poetry]
+packages = [{include = "interrupt_li"}]
+
+[tool.poetry.dependencies]
+python = ">=3.9.0,<4.0"
+dotenv = "^0.9.9"
+llama-index = "^0.12.22"
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
