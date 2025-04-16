@@ -67,13 +67,8 @@ class Interrupt(Workflow):
     async def step_interrupt_one(self, ctx: Context, ev: FirstEvent) -> SecondEvent:
         print(f"> step_interrupt_one input : {ev.ai_answer}")
         await asyncio.sleep(1)
-        ctx.write_event_to_stream(
-            InputRequiredEvent(
-                prefix="How old are you?",
-            )
-        )
         # wait until we see a HumanResponseEvent
-        response = await ctx.wait_for_event(HumanResponseEvent)
+        response = await ctx.wait_for_event(HumanResponseEvent, waiter_id="waiter_step_interrupt_one", waiter_event=InputRequiredEvent(prefix="How old are you?"))
 
         return SecondEvent(ai_answer=f"Received human answer: {response.response}")
 
@@ -81,13 +76,8 @@ class Interrupt(Workflow):
     async def step_interrupt_two(self, ctx: Context, ev: SecondEvent) -> ThirdEvent:
         print(f"> step_interrupt_two input : {ev.ai_answer}")
         await asyncio.sleep(1)
-        ctx.write_event_to_stream(
-            InputRequiredEvent(
-                prefix="What's your favorite food?",
-            )
-        )
-        # wait until we see a HumanResponseEvent
-        response = await ctx.wait_for_event(HumanResponseEvent)
+        response = await ctx.wait_for_event(HumanResponseEvent, waiter_id="waiter_step_interrupt_two", waiter_event=InputRequiredEvent(prefix="What's your favorite food?"))
+
 
         return ThirdEvent(ai_answer=f"Received human answer: {response.response}")
 
@@ -95,11 +85,11 @@ class Interrupt(Workflow):
     async def last_step(self, ev: ThirdEvent) -> StopEvent:
         print(f"> last_step input: {ev.ai_answer}")
         await asyncio.sleep(1)
-        return StopEvent(result={"ai_answer":"This is the output of last_step"})
+        return StopEvent(result={"ai_answer": "This is the output of last_step"})
 
 
 def interrupt_workflow() -> Interrupt:
-    interrupt_workflow = Interrupt(timeout=300)
+    interrupt_workflow = Interrupt(timeout=60)
     return interrupt_workflow
 
 
@@ -115,14 +105,39 @@ async def main():
         if isinstance(ev, InputRequiredEvent):
             # capture keyboard input
             response = input(ev.prefix)
+            ctx = handler.ctx
+            break
             # send our response back
-            handler.ctx.send_event(
-                HumanResponseEvent(
-                    response=response,
-                )
-            )
 
-    final_result = await handler
+    handler2 = workflow.run(ctx=ctx, input="Hello")
+
+    handler2.ctx.send_event(
+        HumanResponseEvent(
+            response=response,
+        )
+    )
+
+    async for ev in handler2.stream_events():
+        print(type(ev), ev)
+        if isinstance(ev, InputRequiredEvent):
+            # capture keyboard input
+            response = input(ev.prefix)
+            ctx = handler2.ctx
+            break
+
+
+    handler3 = workflow.run(ctx=ctx, input="Hello")
+
+    handler3.ctx.send_event(
+        HumanResponseEvent(
+            response=response,
+        )
+    )
+
+    async for ev in handler3.stream_events():
+        print(type(ev), ev)
+
+    final_result = await handler3
     print("Final result: ", final_result)
 
 
