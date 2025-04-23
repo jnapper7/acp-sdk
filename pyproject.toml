@@ -1,6 +1,6 @@
 [project]
 name = "agntcy-acp"
-version = "1.1.2"
+version = "1.2.0"
 license = "Apache-2.0"
 description = "Agent Connect Protocol SDK"
 readme = "README.md"
@@ -22,6 +22,8 @@ python = ">=3.9.0,<4.0"
 click = "^8.1.8"
 openapi-spec-validator = "^0.7.1"
 datamodel-code-generator = "^0.25.6"
+pyyaml = "^6.0.2"
+aiofiles = "^24.1.0"
 # Inherited from generated openapi model
 urllib3 = ">= 1.25.3, < 3.0.0"
 python-dateutil = ">= 2.8.2"
