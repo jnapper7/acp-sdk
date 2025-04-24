@@ -3,7 +3,7 @@
 import asyncio
 from typing import Any
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 from llama_index.core.agent.react import ReActChatFormatter, ReActOutputParser
 from llama_index.core.llms.llm import LLM
 from llama_index.core.memory import ChatMemoryBuffer
@@ -19,8 +19,7 @@ from llama_index.core.workflow import (
     step,
 )
 
-load_dotenv()
-
+load_dotenv(dotenv_path=find_dotenv(usecwd=True))
 
 class HumanMessage(Event):
     human_answer: str
