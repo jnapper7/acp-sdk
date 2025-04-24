@@ -68,8 +68,8 @@
     "deployment_options": [
       {
         "type": "source_code",
-        "name": "src",
-        "url": "github.com/cisco-eti/agent-connect-protocol.git/examples/agents/interrupt-li",
+        "name": "source_code_local",
+        "url": "file://.",
         "framework_config": {
           "framework_type": "llamaindex",
           "graph": "interrupt-li:interrupt_workflow"
