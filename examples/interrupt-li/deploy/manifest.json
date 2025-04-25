@@ -72,7 +72,7 @@
         "url": "file://.",
         "framework_config": {
           "framework_type": "llamaindex",
-          "graph": "interrupt-li:interrupt_workflow"
+          "path": "interrupt-li:interrupt_workflow"
         }
       }
     ]
