@@ -33,28 +33,41 @@ async def node2(state: State):
     answer = interrupt(
         # This value will be sent to the client
         # as part of the interrupt information.
-        {"ai_answer": "What is your age?"}
+        {"ai_answer": "How old are you?"}
     )
-    print(f"> Received an input from the interrupt: {answer}")
+    print(f"> Received an input from the 1st interrupt: {answer}")
     await asyncio.sleep(2)
     return {"human_answer": answer}
 
 
 async def node3(state: State):
+    answer = interrupt(
+        # This value will be sent to the client
+        # as part of the interrupt information.
+        {"ai_answer": "What's your favorite food?"}
+    )
+    print(f"> Received an input from the 2nd interrupt: {answer}")
+    await asyncio.sleep(2)
+    return {"human_answer": answer}
+
+
+async def node4(state: State):
     print(f"> Received input: {state['human_answer']}")
     await asyncio.sleep(3)
-    return {"ai_answer": "This is the output of node3"}
+    return {"ai_answer": "This is the output of node4"}
 
 
 builder = StateGraph(State)
 builder.add_node("node1", node1)
 builder.add_node("node2", node2)
 builder.add_node("node3", node3)
+builder.add_node("node4", node4)
 
 builder.add_edge(START, "node1")
 builder.add_edge("node1", "node2")
 builder.add_edge("node2", "node3")
-builder.add_edge("node3", END)
+builder.add_edge("node3", "node4")
+builder.add_edge("node4", END)
 
 
 # A checkpointer must be enabled for interrupts to work!
@@ -72,7 +85,12 @@ async def run_graph():
     async for chunk in graph.astream({"input": "something"}, config):
         print(chunk)
 
-    command = Command(resume=input("Enter the interrupt command: "))
+    command = Command(resume=input("Enter the 1st interrupt answer: "))
+
+    async for chunk in graph.astream(command, config):
+        print(chunk)
+
+    command = Command(resume=input("Enter the 2nd interrupt answer: "))
 
     async for chunk in graph.astream(command, config):
         print(chunk)
