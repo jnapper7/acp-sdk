@@ -1,12 +1,10 @@
 # Copyright AGNTCY Contributors (https://github.com/agntcy)
 # SPDX-License-Identifier: Apache-2.0
-.PHONY: default install generate_acp_client \
-	generate_acp_server generate install_test test setup_test check all \
+.PHONY: default generate_acp_client \
+	generate_acp_server generate \
 	generate_async_acp_client update_python_subpackage
 
 default: test
-install: 
-	poetry sync
 
 ACP_SPEC_DIR=acp-spec
 ACP_CLIENT_DIR:=acp-sync-client-generated
@@ -67,7 +65,8 @@ generate_manifest_models: $(AGNT_WKFW_SPEC_FILE)
 	ACP_SPEC_VERSION=$$(yq '.info.version | sub("\.\d+", "")' "$(AGNT_WKFW_SPEC_FILE)") ; \
 	AGNT_WKFW_MODEL_PACKAGE_DIR="agntcy_acp/agws_v$${ACP_SPEC_VERSION}" ; \
 	{ mkdir "$${AGNT_WKFW_MODEL_PACKAGE_DIR}" || true ; } ; \
-	poetry run datamodel-codegen \
+	uv run --with datamodel-code-generator -- \
+	  datamodel-codegen \
 		--input $(AGNT_WKFW_SPEC_FILE) \
 		--input-file-type openapi \
 		--output-model-type pydantic_v2.BaseModel \
@@ -98,23 +97,32 @@ update_python_subpackage: $(ACP_CLIENT_DIR)/README.md $(ACP_ASYNC_CLIENT_DIR)/RE
 		"$${ACP_ASYNC_CLIENT_PACKAGE_DIR}/rest.py" \
 		"agntcy_acp/$(ACP_SUBPACKAGE_PREFIX)$${ACP_SPEC_VERSION}/$(SDK_ACP_ASYNC_PACKAGE_NAME)/"
 
-update_docs: $(ACP_CLIENT_DIR)/README.md $(ACP_ASYNC_CLIENT_DIR)/README.md
-	cp -p "$(ACP_CLIENT_DIR)"/docs/*.md docs/models/ && \
-	cp -p "$(ACP_ASYNC_CLIENT_DIR)"/docs/*.md docs/models/
-
 
 generate: generate_acp_client generate_acp_server
 
-setup_test:
-	poetry sync --with test
+.PHONY: sphinx
+sphinx docs/sphinx/agntcy_acp.rst: agntcy_acp/*.py agntcy_acp/*/*.py
+	uv run --with sphinx -- \
+	  sphinx-apidoc -o docs/sphinx/ --full agntcy_acp 'agntcy_acp/agws_v*' 'agntcy_acp/acp_v*'
 
-test: setup_test
-	ACP_SPEC_PATH="$(ACP_SPEC_DIR)/openapi.yaml" poetry run pytest --exitfirst -vv tests/
+.PHONY: docs
+docs docs/html/index.html: docs/sphinx/agntcy_acp.rst
+	$(MAKE) -C docs/sphinx html
 
+.PHONY: test
+test:
+	ACP_SPEC_PATH="$(ACP_SPEC_DIR)/openapi.yaml" \
+	uv run --locked --with pytest --group test -- \
+	  pytest --exitfirst -vv tests/
+
+.PHONY: check
 check: test
 	scripts/check-models.sh
 
-test_gha: setup_test
-	poetry run pytest --exitfirst -vv -m "not needs_acp_spec" tests/
+.PHONY: test_gha
+test_gha:
+	uv run --locked --with pytest --group test -- \
+	  pytest --exitfirst -vv -m "not needs_acp_spec" tests/
 
-all: install generate test
+.PHONY: all
+all: generate test
