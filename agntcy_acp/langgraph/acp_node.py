@@ -2,27 +2,45 @@
 # SPDX-License-Identifier: Apache-2.0
 import logging
 from collections.abc import MutableMapping
-from typing import Any, Dict, Optional
-from pydantic import BaseModel
+from typing import Any, Dict, Optional, Union, cast
+from collections.abc import AsyncIterator, Iterator, Mapping, Sequence
+from langchain_core.callbacks.manager import CallbackManager
 from langchain_core.runnables import RunnableConfig
+from langgraph.types import (
+    Interrupt,
+    interrupt,
+    Command,
+    StreamMode,
+    All,
+    PregelScratchpad,
+)
 from langgraph.utils.runnable import RunnableCallable
+from pydantic import BaseModel
+from langgraph.errors import GraphInterrupt, NodeInterrupt
+from langgraph.constants import (
+    INTERRUPT,
+    CONFIG_KEY_SCRATCHPAD,
+    CONFIG_KEY_CHECKPOINT_NS,
+    NS_SEP,
+)
+import asyncio
 
 from agntcy_acp import (
     ACPClient,
     ApiClient,
+    ApiClientConfiguration,
     AsyncACPClient,
     AsyncApiClient,
-    ApiClientConfiguration,
-)
-from agntcy_acp.models import (
-    Config,
-    RunCreateStateless, 
-    RunResult, 
-    RunOutput, 
-    RunError, 
-    RunInterrupt,
 )
 from agntcy_acp.exceptions import ACPRunException
+from agntcy_acp.models import (
+    Config,
+    RunCreateStateless,
+    RunError,
+    RunInterrupt,
+    RunOutput,
+    RunResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +113,7 @@ class ACPNode:
     def _extract_input(self, state: Any) -> Any:
         if not state:
             return state
-        
+
         try:
             if self.inputPath:
                 state = _extract_element(state, self.inputPath)
@@ -114,13 +132,15 @@ class ACPNode:
     def _extract_config(self, config: Any) -> Any:
         if not config:
             return config
-        
+
         try:
             if not self.configPath:
                 config = {}
             else:
                 if "configurable" not in config:
-                    logger.error(f"ACP Node {self.get_name()}. Unable to extract config: missing key \"configurable\" in RunnableConfig")
+                    logger.error(
+                        f'ACP Node {self.get_name()}. Unable to extract config: missing key "configurable" in RunnableConfig'
+                    )
                     return None
 
                 config = _extract_element(config["configurable"], self.configPath)
@@ -152,7 +172,7 @@ class ACPNode:
                 output_parent = getattr(output_parent, el)
             else:
                 raise ValueError("object missing attribute: {el}")
-        
+
         el = self.outputPath.split(".")[-1]
         if isinstance(output_parent, MutableMapping):
             output_parent[el] = output_state
@@ -160,7 +180,7 @@ class ACPNode:
             setattr(output_parent, el, output_state)
         else:
             raise ValueError("object missing attribute: {el}")
-    
+
     def _prepare_run_create(self, state: Any, config: RunnableConfig) -> RunCreateStateless:
         agent_input = self._extract_input(state)
         if isinstance(agent_input, BaseModel):
@@ -182,8 +202,34 @@ class ACPNode:
             agent_id=self.agent_id,
             input=input_to_agent,
             config=Config(configurable=config_to_agent),
+            multitask_strategy="interrupt",
         )
-    
+
+    def _handle_interrupt(self, state: Any, config: RunnableConfig, value: Any) -> Any:
+        conf = config.get("configurable")
+        scratchpad: PregelScratchpad = conf[CONFIG_KEY_SCRATCHPAD]
+        idx = scratchpad.interrupt_counter()
+        # find previous resume values
+        if scratchpad.resume:
+            if idx < len(scratchpad.resume):
+                return scratchpad.resume[idx]
+
+        v = scratchpad.get_null_resume(True)
+
+        if v is not None:
+            assert len(scratchpad.resume) == idx, (scratchpad.resume, idx)
+            return v
+
+        raise GraphInterrupt(
+            (
+                Interrupt(
+                    value=value,
+                    resumable=True,
+                    ns=cast(str, conf[CONFIG_KEY_CHECKPOINT_NS]).split(NS_SEP),
+                )
+            )
+        )
+
     def _handle_run_output(self, state: Any, run_output: RunOutput):
         if isinstance(run_output.actual_instance, RunResult):
             run_result: RunResult = run_output.actual_instance
@@ -192,27 +238,66 @@ class ACPNode:
             run_error: RunError = run_output.actual_instance
             raise ACPRunException(f"Run Failed: {run_error}")
         elif isinstance(run_output.actual_instance, RunInterrupt):
-            raise ACPRunException(f"ACP Server returned a unsupporteed interrupt response: {run_output}")
+            # This case is handled in the invokes
+            pass
+
         else:
-            raise ACPRunException(f"ACP Server returned a unsupporteed response: {run_output}")
+            raise ACPRunException(
+                f"ACP Server returned a unsupporteed response: {run_output}"
+            )
 
         return state
 
-    def invoke(self, state: Any, config: RunnableConfig) -> Any:
+    def invoke(
+        self,
+        state: dict[str, Any] | Any,
+        config: RunnableConfig | None = None,
+        **kwargs: Any,
+    ) -> Any:
         run_create = self._prepare_run_create(state, config)
         with ACPClient(configuration=self.clientConfig) as acp_client:
             run_output = acp_client.create_and_wait_for_stateless_run_output(run_create)
-        
+
+            if isinstance(run_output.output.actual_instance, RunInterrupt):
+                interrupt_result = self._handle_interrupt(
+                    state,
+                    config,
+                    run_output.output.actual_instance.interrupt["default"],
+                )
+                resume_run = acp_client.resume_stateless_run(
+                    run_id=run_output.run.run_id, body=interrupt_result
+                )
+                run_output = acp_client.wait_for_stateless_run_output(
+                    run_id=resume_run.run_id
+                )
+
         # output is the same between stateful and stateless
         self._handle_run_output(state, run_output.output)
         return state
 
-    async def ainvoke(self, state: Any, config: RunnableConfig) -> Any:
+    async def ainvoke(
+        self,
+        state: dict[str, Any] | Any,
+        config: RunnableConfig | None = None,
+        **kwargs: Any,
+    ) -> Any:
         run_create = self._prepare_run_create(state, config)
         async with AsyncACPClient(configuration=self.clientConfig) as acp_client:
             run_output = await acp_client.create_and_wait_for_stateless_run_output(run_create)
-        
-        self._handle_run_output(state, run_output.output)
+            if isinstance(run_output.output.actual_instance, RunInterrupt):
+                interrupt_result = self._handle_interrupt(
+                    state,
+                    config,
+                    run_output.output.actual_instance.interrupt["default"],
+                )
+                resume_run = await acp_client.resume_stateless_run(
+                    run_id=run_output.run.run_id, body=interrupt_result
+                )
+                run_output = await acp_client.wait_for_stateless_run_output(
+                    run_id=resume_run.run_id
+                )
+
+        state = self._handle_run_output(state, run_output.output)
         return state
 
     def __call__(self, state, config):
