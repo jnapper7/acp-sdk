@@ -68,7 +68,7 @@ def test_interrupt_acp_node(
                 created_at=datetime.datetime.now(),
                 updated_at=datetime.datetime.now(),
             ),
-            output=RunOutput.from_dict(
+            output=RunOutput(
                 RunInterrupt(
                     type="interrupt",
                     interrupt={
@@ -76,7 +76,7 @@ def test_interrupt_acp_node(
                         "resumable": True,
                         "ns": ["step_3:62e598fa-8653-9d6d-2046-a70203020e37"],
                     },
-                ).model_dump(),
+                )
             ),
         )
         return run
