@@ -72,7 +72,7 @@ def test_interrupt_acp_node(
                 RunInterrupt(
                     type="interrupt",
                     interrupt={
-                        "default": "please provide feedback",
+                        "value": "please provide feedback",
                         "resumable": True,
                         "ns": ["step_3:62e598fa-8653-9d6d-2046-a70203020e37"],
                     },
@@ -157,7 +157,6 @@ def test_interrupt_acp_node(
     mock_resume_stateless_run.assert_called_once()
     mock_wait_for_stateless_run_output.assert_called_once()
     state_after_interrutp = graph.get_state(thread)
-    print(state_after_interrutp)
 
     assert len(state_after_interrutp.tasks) == 0
     assert state_after_interrutp.next == ()

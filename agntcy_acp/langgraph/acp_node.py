@@ -24,6 +24,7 @@ from agntcy_acp.models import (
     RunInterrupt,
     RunOutput,
     RunResult,
+    RunWaitResponseStateless,
 )
 
 logger = logging.getLogger(__name__)
@@ -209,24 +210,31 @@ class ACPNode:
 
         return state
 
-    def _get_thread_id(self, config):
+    def _get_thread_id(self, config: RunnableConfig):
         configurable = config.get("configurable", {})
         thread_id = configurable.get("thread_id", None)
         return thread_id
 
-    def _handle_interrupt(self, config, run_output):
-        thread_id = self._get_thread_id(config=config)
-        value = run_output.output.actual_instance.interrupt["default"]
+    def _handle_interrupt(
+        self,
+        config: RunnableConfig,
+        run_output: RunWaitResponseStateless,
+        thread_id: str,
+    ):
+        if thread_id is None:
+            raise ValueError("Thread_id is required for a interrupted run")
 
-        if (
-            thread_id is not None
-            and self.previous_thread_run.get(thread_id, None) is None
-        ):
+        first_key = next(iter(run_output.output.actual_instance.interrupt))
+
+        value = run_output.output.actual_instance.interrupt[first_key]
+
+        previous_thread_run = self.previous_thread_run.get(thread_id, None)
+
+        if previous_thread_run is None:
             self.previous_thread_run[thread_id] = run_output
 
         interrupt_result = interrupt(value)
-        if thread_id is not None and thread_id in self.previous_thread_run:
-            del self.previous_thread_run[thread_id]
+        del self.previous_thread_run[thread_id]
 
         return interrupt_result
 
@@ -238,24 +246,19 @@ class ACPNode:
     ) -> Any:
 
         thread_id = self._get_thread_id(config)
-        run_create = self._prepare_run_create(state, config)
         with ACPClient(configuration=self.clientConfig) as acp_client:
             run_output = None
             if thread_id is not None and thread_id in self.previous_thread_run:
-                previous_run_output = self.previous_thread_run.get(thread_id, None)
-                run_output = (
-                    acp_client.create_and_wait_for_stateless_run_output(run_create)
-                    if previous_run_output is None
-                    else previous_run_output
-                )
+                run_output = self.previous_thread_run.get(thread_id, None)
             else:
+                run_create = self._prepare_run_create(state, config)
                 run_output = acp_client.create_and_wait_for_stateless_run_output(
                     run_create
                 )
 
             if isinstance(run_output.output.actual_instance, RunInterrupt):
                 interrupt_result = self._handle_interrupt(
-                    config=config, run_output=run_output
+                    config=config, run_output=run_output, thread_id=thread_id
                 )
                 resume_run = acp_client.resume_stateless_run(
                     run_id=run_output.run.run_id, body=interrupt_result
@@ -276,28 +279,19 @@ class ACPNode:
     ) -> Any:
         async with AsyncACPClient(configuration=self.clientConfig) as acp_client:
             thread_id = self._get_thread_id(config)
-            run_create = self._prepare_run_create(state, config)
             run_output = None
 
             if thread_id is not None and thread_id in self.previous_thread_run:
-                previous_run_output = self.previous_thread_run.get(thread_id, None)
-
-                run_output = (
-                    await acp_client.create_and_wait_for_stateless_run_output(
-                        run_create
-                    )
-                    if previous_run_output is None
-                    else previous_run_output
-                )
+                run_output = self.previous_thread_run.get(thread_id, None)
             else:
+                run_create = self._prepare_run_create(state, config)
                 run_output = await acp_client.create_and_wait_for_stateless_run_output(
                     run_create
                 )
 
             if isinstance(run_output.output.actual_instance, RunInterrupt):
                 interrupt_result = self._handle_interrupt(
-                    config=config,
-                    run_output=run_output,
+                    config=config, run_output=run_output, thread_id=thread_id
                 )
 
                 resume_run = await acp_client.resume_stateless_run(
