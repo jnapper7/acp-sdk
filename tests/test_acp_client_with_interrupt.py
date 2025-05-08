@@ -72,7 +72,7 @@ def test_interrupt_acp_node(
                 RunInterrupt(
                     type="interrupt",
                     interrupt={
-                        "value": "please provide feedback",
+                        "value": "Please provide feedback",
                         "resumable": True,
                         "ns": ["step_3:62e598fa-8653-9d6d-2046-a70203020e37"],
                     },
@@ -81,14 +81,33 @@ def test_interrupt_acp_node(
         )
         return run
 
-    monkeypatch.setattr(
-        agntcy_acp.ACPClient,
-        "create_and_wait_for_stateless_run_output",
-        mock_response_deserialize,
-    )
-    mock_resume_stateless_run = Mock()
-    mock_wait_for_stateless_run_output = Mock(
-        return_value=RunWaitResponseStateless(
+    def mock_wait_for_stateless_run_output_1(self, run_id):
+        mock_wait_for_stateless_run_output = RunWaitResponseStateless(
+            run=RunStateless(
+                run_id="1929838238",
+                agent_id=default_agent_id,
+                creation=RunCreateStateless(
+                    agent_id=default_agent_id, multitask_strategy="interrupt"
+                ),
+                status=RunStatus.INTERRUPTED,
+                created_at=datetime.datetime.now(),
+                updated_at=datetime.datetime.now(),
+            ),
+            output=RunOutput(
+                RunInterrupt(
+                    type="interrupt",
+                    interrupt={
+                        "confirmation": "Please confirm your feedback",
+                        "resumable": True,
+                        "ns": ["step_3:62e598fa-8653-9d6d-2046-a70203020e37"],
+                    },
+                )
+            ),
+        )
+        return mock_wait_for_stateless_run_output
+
+    def mock_wait_for_stateless_run_output_2(self, run_id):
+        mock_wait_for_stateless_run_output_final = RunWaitResponseStateless(
             run=RunStateless(
                 run_id=init_run_id,
                 agent_id=default_agent_id,
@@ -101,15 +120,22 @@ def test_interrupt_acp_node(
                 {"type": "result", "values": output_state.model_dump()}
             ),
         )
-    )
 
+        return mock_wait_for_stateless_run_output_final
+
+    monkeypatch.setattr(
+        agntcy_acp.ACPClient,
+        "create_and_wait_for_stateless_run_output",
+        mock_response_deserialize,
+    )
+    mock_resume_stateless_run = Mock()
     monkeypatch.setattr(
         agntcy_acp.ACPClient, "resume_stateless_run", mock_resume_stateless_run
     )
     monkeypatch.setattr(
         agntcy_acp.ACPClient,
         "wait_for_stateless_run_output",
-        mock_wait_for_stateless_run_output,
+        mock_wait_for_stateless_run_output_1,
     )
 
     client_config = ApiClientConfiguration.fromEnvPrefix("PHILOSOPHER_AGENT_")
@@ -147,16 +173,30 @@ def test_interrupt_acp_node(
     graph = sg.compile(checkpointer=memory)
     graph.invoke({}, thread)
     curr_state = graph.get_state(thread)
+    print(f"first_state {curr_state}")
     # Graph should be interrupted
+    assert len(curr_state.tasks) > 0
     assert curr_state.tasks[0].interrupts is not None
-    assert curr_state.next == ("philosopher_agent",)
 
     # Resume execution of graph
     graph.invoke(Command(resume={"user_feedback": "Continue execution"}), thread)
 
     mock_resume_stateless_run.assert_called_once()
-    mock_wait_for_stateless_run_output.assert_called_once()
-    state_after_interrutp = graph.get_state(thread)
+    state_after_interrupt = graph.get_state(thread)
 
-    assert len(state_after_interrutp.tasks) == 0
-    assert state_after_interrutp.next == ()
+    print(state_after_interrupt)
+
+    assert len(state_after_interrupt.tasks) > 0
+    assert state_after_interrupt.tasks[0].interrupts is not None
+
+    monkeypatch.setattr(
+        agntcy_acp.ACPClient,
+        "wait_for_stateless_run_output",
+        mock_wait_for_stateless_run_output_2,
+    )
+    # Resume execution of graph
+    graph.invoke(Command(resume={"user_feedback": "Yap I'm good"}), thread)
+
+    final_state = graph.get_state(thread)
+    assert len(final_state.tasks) == 0
+    assert final_state.next == ()

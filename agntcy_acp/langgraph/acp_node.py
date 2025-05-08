@@ -256,7 +256,7 @@ class ACPNode:
                     run_create
                 )
 
-            if isinstance(run_output.output.actual_instance, RunInterrupt):
+            while isinstance(run_output.output.actual_instance, RunInterrupt):
                 interrupt_result = self._handle_interrupt(
                     config=config, run_output=run_output, thread_id=thread_id
                 )
@@ -289,7 +289,7 @@ class ACPNode:
                     run_create
                 )
 
-            if isinstance(run_output.output.actual_instance, RunInterrupt):
+            while isinstance(run_output.output.actual_instance, RunInterrupt):
                 interrupt_result = self._handle_interrupt(
                     config=config, run_output=run_output, thread_id=thread_id
                 )
