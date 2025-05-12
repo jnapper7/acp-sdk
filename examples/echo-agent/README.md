@@ -53,9 +53,13 @@ Before running the application, ensure you have the following:
 assumes you are deploying from the directory with the `pyproject.toml` 
 file for the echo agent. Adjust as needed.
 
+If using wfsm version prior to 0.2.1
   ```
   wfsm deploy --manifestPath deploy/echo-agent-manifest.json --envFilePath deploy/echo-agent-wfsm-config.yaml
+
+Otherwise use 
   ```
+  wfsm deploy --manifestPath deploy/echo-agent-manifest.json --configPath=deploy/echo-agent-wfsm-config.yaml
 
   Using the output of the logs to get the values for the
   `API_KEY`, `AGENT_ID`, and `WORKFLOW_SERVER_PORT`, we can
