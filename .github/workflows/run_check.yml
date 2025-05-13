@@ -23,6 +23,29 @@ permissions:
 # Note: consider the job names to be global if you want to require
 # them to succeed for a PR. :)
 jobs:
+  lint-and-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up python ${{ env.PYTHON_VERSION }}
+        id: setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          update-environment: true
+
+      - name: Install uv
+        run: |
+          pipx install uv==${{ env.UV_VERSION }}
+
+      - name: Lint check
+        run: make lint_check
+
+      - name: Format check
+        run: make format_check
+
   sdk-code-check:
     runs-on: ubuntu-latest
     steps:
@@ -50,4 +73,3 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "- uv Version: ${{ env.UV_VERSION }}" >> $GITHUB_STEP_SUMMARY
         echo "- Python Version: ${{ env.PYTHON_VERSION}}" >> $GITHUB_STEP_SUMMARY
-

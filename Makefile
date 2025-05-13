@@ -126,3 +126,11 @@ test_gha:
 
 .PHONY: all
 all: generate test
+
+.PHONY: lint_check
+lint_check: 
+	uvx ruff check .
+
+.PHONY: format_check
+format_check: 
+	uvx ruff format --diff .
