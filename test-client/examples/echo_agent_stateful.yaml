@@ -30,10 +30,9 @@ operations:
         arguments:
           agent_id: "{{ env.ECHO_AGENT_AGENT_ID }}"
           input:
-            echo_input:
-              messages:
-                - type: human
-                  content: "What is up, Dude?"
+            messages:
+              - type: human
+                content: "What is up, Dude?"
           config:
             configurable:
               to_upper: true
@@ -42,14 +41,13 @@ operations:
         value: "{{ results[0].thread_id }}"
     output_at_least:
       output:
-        actual_instance:
-          type: result
-          values:
-            messages:
-              - content: "What is up, Dude?"
-                type: human
-              - content: "WHAT IS UP, DUDE?"
-                type: assistant
+        type: result
+        values:
+          messages:
+            - content: "What is up, Dude?"
+              type: human
+            - content: "WHAT IS UP, DUDE?"
+              type: assistant
       run:
         status: success
 
@@ -95,10 +93,9 @@ operations:
         arguments:
           agent_id: "{{ env.ECHO_AGENT_AGENT_ID }}"
           input:
-            echo_input:
-              messages:
-                - type: human
-                  content: "Another message"
+            messages:
+              - type: human
+                content: "Another message"
           config:
             configurable:
               to_upper: true
@@ -107,14 +104,13 @@ operations:
         value: "{{ results[0].thread_id }}"
     output_at_least:
       output:
-        actual_instance:
-          type: result
-          values:
-            messages:
-              - content: "Another message"
-                type: human
-              - content: "ANOTHER MESSAGE"
-                type: assistant
+        type: result
+        values:
+          messages:
+            - content: "Another message"
+              type: human
+            - content: "ANOTHER MESSAGE"
+              type: assistant
       run:
         status: success
 
