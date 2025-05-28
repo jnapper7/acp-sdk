@@ -1,7 +1,7 @@
 [project]
 name = "echo_agent"
-version = "0.2.1"
-license = "Apache-2.0"
+version = "0.3.0"
+license-files = [ "LICENSE" ]
 description = "Echoes input to output."
 readme = "README.md"
 authors = [
@@ -10,19 +10,15 @@ authors = [
 maintainers = [
     { name = "AGNTCY Internet of Agents Collective", email = "pypi@agntcy.io" },
 ]
+requires-python = ">=3.9.0, <4.0"
+dependencies = [
+    "langgraph >= 0.3.5",
+    "pydantic >= 2",
+    "click >= 8.1.8",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.9.0,<4.0"
-langgraph = "^0.3.5"
-pydantic = ">= 2"
-click = "^8.1.8"
-
-[tool.poetry.group.sanity.dependencies]
-mypy = "^1.10.0"
-ruff = "^0.4.6"
-
-[tool.poetry.scripts]
-echo_agent = "echo_agent.main:echo_server_agent"
+[project.scripts]
+echo-agent = "echo_agent.main:echo_server_agent"
 
 [tool.ruff]
 lint.select = ["E", "F", "I", "TID251"]
@@ -49,6 +45,11 @@ allow_redefinition = true
 # https://mypy.readthedocs.io/en/stable/config_file.html
 disable_error_code = "typeddict-item, return-value, override, has-type"
 
+[tool.uv.build-backend]
+source-exclude = [
+    "/deploy"
+]
+
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
