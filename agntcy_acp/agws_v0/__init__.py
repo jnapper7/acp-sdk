@@ -54,6 +54,7 @@ from .models import (
     CustomRunResultUpdate,
     RunInterrupt,
     AgentDependency,
+    LangGraphConfig,
     LlamaIndexConfig,
     AgentConnectProtocol,
     RunCreateStateful,
@@ -69,4 +70,8 @@ from .models import (
     DeploymentOptions,
     AgentDeployment,
     AgentManifest,
+    Locator,
+    DeploymentManifest,
 )
+
+OASF_EXTENSION_NAME_MANIFEST = "oasf.agntcy.org/feature/runtime/manifest"
